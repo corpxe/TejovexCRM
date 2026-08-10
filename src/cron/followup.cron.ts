@@ -14,7 +14,7 @@ export const startFollowUpCron = () => {
   });
 
   // Runs every hour — sends scheduled emails
-  cron.schedule('0 * * * *', async () => {
+  cron.schedule('*/5 * * * *', async () => {
     try {
       await FollowUpService.sendScheduledEmails();
       console.log('[CRON] Scheduled email check complete');
