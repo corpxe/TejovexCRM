@@ -13,7 +13,7 @@ export const startFollowUpCron = () => {
     }
   });
 
-  // Runs every hour — sends scheduled emails
+  // Runs every 5 minutes — sends scheduled emails
   cron.schedule('*/5 * * * *', async () => {
     try {
       await FollowUpService.sendScheduledEmails();
