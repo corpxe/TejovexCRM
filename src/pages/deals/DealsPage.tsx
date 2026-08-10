@@ -58,27 +58,25 @@ export default function DealsPage() {
   const [editingDeal, setEditingDeal]         = useState<Deal | null>(null);
   const [showManageStages, setShowManageStages] = useState(false);
   const [newStageName, setNewStageName]       = useState("");
+  const [loading, setLoading] = useState(true);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DealFormData>({
     resolver: zodResolver(dealSchema),
   });
 
   // ADD: fetch deals and pipeline stages from backend on page load
-  useEffect(() => {
-    axios.get(`${API}/deals`, getAuthHeaders())
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setDeals(data);
-      })
-      .catch((err) => console.error("Deals fetch error:", err));
-
-    axios.get(`${API}/pipeline-stages`, getAuthHeaders())
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setStages(data);
-      })
-      .catch((err) => console.error("Stages fetch error:", err));
-  }, []);
+useEffect(() => {
+  Promise.all([
+    axios.get(`${API}/deals`, getAuthHeaders()),
+    axios.get(`${API}/pipeline-stages`, getAuthHeaders()),
+  ])
+    .then(([dealsRes, stagesRes]) => {
+      setDeals(Array.isArray(dealsRes.data) ? dealsRes.data : dealsRes.data.data || []);
+      setStages(Array.isArray(stagesRes.data) ? stagesRes.data : stagesRes.data.data || []);
+    })
+    .catch((err) => console.error(err))
+    .finally(() => setLoading(false));
+}, []);
 
   const openAdd = () => {
     setEditingDeal(null);
@@ -285,6 +283,17 @@ const handleDealDrop = async (e: React.DragEvent, stageId: string) => {
         </div>
       </div>
 
+
+      {/* Loading Spinner */}
+{loading ? (
+  <div className="flex items-center justify-center py-32">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+  </div>
+) : (
+  <>
+
+
+
       {/* Kanban Board */}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {stages.map((stage) => {
@@ -447,7 +456,11 @@ const handleDealDrop = async (e: React.DragEvent, stageId: string) => {
             </form>
           </div>
         </div>
-      )}
+      
+)}
+
+  </>
+)}
 
     </div>
   );

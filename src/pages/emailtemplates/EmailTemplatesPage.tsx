@@ -188,7 +188,9 @@ const handleDelete = async () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400">Loading...</div>
+        <div className="flex items-center justify-center py-32">
+  <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+</div>
       ) : templates.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <Mail size={40} className="mx-auto mb-3 opacity-30" />

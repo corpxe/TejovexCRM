@@ -50,23 +50,23 @@ export default function ContactsPage() {
   const [viewingContact, setViewingContact] = useState<Contact | null>(null);
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [importing, setImporting]       = useState(false);
-const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
-const fileInputRef                    = useRef<HTMLInputElement>(null);
+  const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
+  const fileInputRef                    = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
 
   // Fetch contacts only — REMOVED companies fetch
-  useEffect(() => {
+useEffect(() => {
     axios.get(`${API}/contacts`, getAuthHeaders())
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setContacts(data);
       })
-      .catch((err) => console.error(err));
-
-    // ↑ REMOVED: companies axios.get — dropdown gone, no need to load list
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = contacts.filter((c) =>
@@ -233,7 +233,12 @@ const handleDelete = async () => {
         />
       </div>
 
-      {/* Table — UNCHANGED */}
+{/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center py-32">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+        </div>
+      ) : (
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
@@ -267,9 +272,10 @@ const handleDelete = async () => {
             )}
           </tbody>
         </table>
-      </div>
+</div>
+      )}
 
-      {/* View Modal — UNCHANGED */}
+      {/* View Modal */}
       {viewingContact && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">

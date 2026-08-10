@@ -294,7 +294,9 @@ const handleDelete = async () => {
 
       {/* Table */}
       {loading ? (
-        <p className="text-gray-400 text-sm mt-6">Loading tasks...</p>
+        <div className="flex items-center justify-center py-32">
+  <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+</div>
       ) : (
         <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
           <table className="w-full text-sm text-left">

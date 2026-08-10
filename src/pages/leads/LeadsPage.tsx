@@ -27,9 +27,12 @@ interface Lead {
   assignedToName?: string;
   email?: string;
   phone?: string;
+  company?: string;
   assignedTo?: { firstName: string; lastName: string } | null;
   contact?: { firstName: string; lastName: string } | null;
   createdAt?: string;
+  email?: string;
+  phone?: string;
 }
 
 // ADD this type after the Lead interface
@@ -50,6 +53,7 @@ const leadSchema = z.object({
   assignedToName: z.string().optional(),
   email: z.union([z.string().email(), z.literal('')]).optional(),
   phone: z.string().optional(),
+  company: z.string().optional(),
 });
 
 type LeadFormData = z.infer<typeof leadSchema>;
@@ -90,14 +94,17 @@ export default function LeadsPage() {
   const [assignName, setAssignName] = useState("");
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
 const fetchLeads = () => {
+    setLoading(true);
     axios.get(`${API}/leads`, getAuthHeaders())
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setLeads(data);
       })
-      .catch((err) => console.error("Fetch leads error:", err));
+      .catch((err) => console.error("Fetch leads error:", err))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -122,7 +129,7 @@ const fetchLeads = () => {
 
   const openAdd = () => {
     setEditingLead(null);
-       reset({ title: "", status: "NEW", source: "WEBSITE", value: 0, contactName: "", assignedToName: "", email: "", phone: "" });    
+       reset({ title: "", status: "NEW", source: "WEBSITE", value: 0, contactName: "", assignedToName: "", email: "", phone: "" ,company: ""});    
        setIsModalOpen(true);
   };
 
@@ -137,6 +144,7 @@ const fetchLeads = () => {
       assignedToName: lead.assignedToName || "",
       email: lead.email || "",
       phone: lead.phone || "",
+      company: (lead as any).company || "",
     });
     setIsModalOpen(true);
   };
@@ -151,6 +159,7 @@ const fetchLeads = () => {
       assignedToName: data.assignedToName || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
+      company: data.company || undefined,
     };
     try {
       if (editingLead) {
@@ -236,6 +245,11 @@ const handleAssign = async () => {
       </div>
 
       {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center py-32">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+        </div>
+      ) : (
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
@@ -246,6 +260,9 @@ const handleAssign = async () => {
               <th className="px-6 py-3">Value</th>
               <th className="px-6 py-3">Assigned To</th>
               <th className="px-6 py-3">Contact</th>
+              <th className="px-6 py-3">Email</th>
+              <th className="px-6 py-3">Phone</th>
+              <th className="px-6 py-3">Company</th>
               <th className="px-6 py-3">Actions</th>
             </tr>
           </thead>
@@ -273,10 +290,15 @@ const handleAssign = async () => {
                   </td>
                   <td className="px-6 py-4 text-gray-600">{lead.assignedToName || '—'}</td>
                   <td className="px-6 py-4 text-gray-600">{lead.contactName || displayName(lead.contact)}</td>
+                  
+                  <td className="px-6 py-4 text-gray-600">{(lead as any).email || '—'}</td>
+                  <td className="px-6 py-4 text-gray-600">{(lead as any).phone || '—'}</td>
+                  <td className="px-6 py-4 text-gray-600">{(lead as any).company || '—'}</td>
                   <td className="px-6 py-4 flex gap-2">
                     <button onClick={() => setViewingLead(lead)} className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition">View</button>
                     <button onClick={() => setStatusModal(lead)} className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition">Status</button>
                     <button onClick={() => { setAssignModal(lead); setAssignName(lead.assignedToName || ''); }} className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition">Assign</button>
+                    <button onClick={() => openEdit(lead)} className="px-3 py-1 text-xs border border-blue-300 text-blue-500 rounded hover:bg-blue-50 transition">Edit</button>
                     <button onClick={() => setDeletingLead(lead)} className="px-3 py-1 text-xs border border-red-300 text-red-500 rounded hover:bg-red-50 transition">Del</button>
                   </td>
                 </tr>
@@ -284,7 +306,8 @@ const handleAssign = async () => {
             )}
           </tbody>
         </table>
-      </div>
+</div>
+      )}
 
       {/* View Modal */}
       {viewingLead && (
@@ -298,6 +321,7 @@ const handleAssign = async () => {
               <p><span className="font-medium">Value:</span> {viewingLead.value > 0 ? `₹${viewingLead.value.toLocaleString("en-IN")}` : "—"}</p>
               <p><span className="font-medium">Assigned To:</span> {viewingLead.assignedToName || displayName(viewingLead.assignedTo)}</p>
               <p><span className="font-medium">Contact:</span> {viewingLead.contactName || displayName(viewingLead.contact)}</p>
+              <p><span className="font-medium">Company:</span> {(viewingLead as any).company || '—'}</p>
             </div>
             <button onClick={() => setViewingLead(null)} className="mt-5 w-full py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition">Close</button>
           </div>
@@ -426,6 +450,10 @@ const handleAssign = async () => {
 <div>
   <label className="text-sm text-gray-600 mb-1 block">Phone</label>
   <input {...register("phone")} type="text" placeholder="+91 9876543210" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+</div>
+<div>
+  <label className="text-sm text-gray-600 mb-1 block">Company</label>
+  <input {...register("company")} placeholder="Company name" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
 </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>

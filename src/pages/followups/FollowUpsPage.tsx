@@ -99,6 +99,8 @@ export default function FollowUpsPage() {
   const [completeModal, setCompleteModal] = useState<FollowUp | null>(null);
   const [completionNote, setCompletionNote] = useState('');
   const [deletingFollowUp, setDeletingFollowUp] = useState<FollowUp | null>(null);
+  const [editingFollowUp, setEditingFollowUp] = useState<FollowUp | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -245,6 +247,32 @@ const handleDelete = async () => {
   fetchFollowUps();
 };
 
+const handleEdit = async () => {
+  if (!editingFollowUp) return;
+  setSubmitting(true);
+  try {
+    await axios.patch(
+      `${BASE_URL}/followups/${editingFollowUp.id}`,
+      {
+        title: form.title,
+        priority: form.priority,
+        dueDate: form.dueDate,
+        scheduledAt: form.scheduledAt || undefined,
+        emailSubject: form.emailSubject || undefined,
+        emailBody: form.emailBody || undefined,
+      },
+      getAuthHeaders()
+    );
+    setShowEditModal(false);
+    setEditingFollowUp(null);
+    fetchFollowUps();
+  } catch (err: any) {
+    alert(err?.response?.data?.message || 'Something went wrong.');
+  } finally {
+    setSubmitting(false);
+  }
+};
+
   const getLinkedName = (fu: FollowUp) => {
     if (fu.lead) return fu.lead.contactName || fu.lead.title;
     if (fu.contact) return `${fu.contact.firstName} ${fu.contact.lastName}`;
@@ -298,7 +326,9 @@ const handleDelete = async () => {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-16 text-gray-400">Loading...</div>
+        <div className="flex items-center justify-center py-32">
+  <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent" />
+</div>
       ) : followUps.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <CalendarClock size={40} className="mx-auto mb-3 opacity-30" />
@@ -359,6 +389,24 @@ const handleDelete = async () => {
                           <CheckCircle2 size={12} /> Done
                         </button>
                       )}
+                      <button
+  onClick={() => {
+    setEditingFollowUp(fu);
+    setForm(p => ({
+      ...p,
+      title: fu.title,
+      priority: fu.priority,
+      dueDate: fu.dueDate.split('T')[0],
+      scheduledAt: fu.scheduledAt || '',
+      emailSubject: fu.emailSubject || '',
+      emailBody: fu.emailBody || '',
+    }));
+    setShowEditModal(true);
+  }}
+  className="flex items-center gap-1 px-2 py-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
+>
+  Edit
+</button>
                       <button
                         onClick={() => setDeletingFollowUp(fu)}
                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -637,6 +685,101 @@ const handleDelete = async () => {
     </div>
   </div>
 )}
+
+{showEditModal && editingFollowUp && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="flex items-center justify-between p-5 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-800">Edit Follow-Up</h2>
+        <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600">
+          <X size={20} />
+        </button>
+      </div>
+      <div className="p-5 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input
+            type="text"
+            value={form.title}
+            onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={form.priority}
+              onChange={e => setForm(p => ({ ...p, priority: e.target.value as FollowUpPriority }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <input
+              type="date"
+              value={form.dueDate}
+              onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        {editingFollowUp.type === 'EMAIL' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Auto-send At</label>
+              <input
+                type="datetime-local"
+                value={form.scheduledAt}
+                onChange={e => setForm(p => ({ ...p, scheduledAt: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <input
+                type="text"
+                value={form.emailSubject}
+                onChange={e => setForm(p => ({ ...p, emailSubject: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Body</label>
+              <textarea
+                value={form.emailBody}
+                onChange={e => setForm(p => ({ ...p, emailBody: e.target.value }))}
+                rows={5}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </>
+        )}
+      </div>
+      <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
+        <button
+          onClick={() => setShowEditModal(false)}
+          className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleEdit}
+          disabled={submitting}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >
+          {submitting ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
     </div>
   );
