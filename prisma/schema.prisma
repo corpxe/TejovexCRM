@@ -72,7 +72,7 @@ model Contact {
 
 model Lead {
   id           String      @id @default(uuid())
-  company        String
+  title        String
   status       LeadStatus  @default(NEW)
   source       LeadSource?
   value          Float?
