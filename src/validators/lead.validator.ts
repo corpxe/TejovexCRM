@@ -11,6 +11,7 @@ export const createLeadSchema = z.object({
   assignedToName: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
+  company: z.string().optional(),
 });
 
 export const updateLeadSchema = createLeadSchema.partial();

@@ -19,7 +19,7 @@ const buildVariables = async (
       vars['lead.title'] = lead.title || '';
       vars['lead.email'] = lead.email || '';
       vars['lead.phone'] = lead.phone || '';
-      vars['lead.company'] = '';
+      vars['lead.company'] = lead.company || '';
     }
   }
 
