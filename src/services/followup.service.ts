@@ -189,9 +189,9 @@ export const FollowUpService = {
   async sendScheduledEmails() {
     const now = new Date();
     const scheduled = await prisma.followUp.findMany({
-      where: {
+where: {
         type: 'EMAIL',
-        status: 'PENDING',
+        status: { in: ['PENDING', 'OVERDUE'] },
         scheduledAt: { lte: now },
         emailSentAt: null,
         deletedAt: null,
