@@ -13,6 +13,7 @@ import Tasks           from "./pages/tasks/TasksPage";
 import Profile         from "./pages/profile/Profile";
 import FollowUpsPage from "./pages/followups/FollowUpsPage";
 import EmailTemplatesPage from "./pages/emailtemplates/EmailTemplatesPage";
+import Analytics from "./pages/analytics/AnalyticsPage";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/profile"   element={<Profile />} />
               <Route path="/followups" element={<FollowUpsPage />} />
               <Route path="/email-templates" element={<EmailTemplatesPage />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
           </Route>
 

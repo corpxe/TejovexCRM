@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Building2, Star,
   GitPullRequest, CheckSquare, FileText, UserCircle, LogOut,
-  CalendarClock, Mail,
+  CalendarClock, Mail, BarChart3,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -41,6 +41,8 @@ const navItems = [
       { label: "Follow-Ups",       to: "/followups",        icon: CalendarClock },
       
       { label: "Email Templates",  to: "/email-templates",  icon: Mail },
+
+      { label: "Analytics", to: "/analytics", icon: BarChart3 },
 
     ],
 
