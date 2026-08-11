@@ -18,8 +18,8 @@ export const EmailTemplateService = {
     });
   },
 
-  async getAll(stage?: string) {
-    const where: any = { deletedAt: null };
+  async getAll(userId: string, stage?: string) {
+    const where: any = { deletedAt: null, createdById: userId };
     if (stage) where.stage = stage;
 
     return await prisma.emailTemplate.findMany({
@@ -31,24 +31,26 @@ export const EmailTemplateService = {
     });
   },
 
-  async getByStage(stage: string) {
+  async getByStage(stage: string, userId: string) {
     return await prisma.emailTemplate.findMany({
-      where: { stage: stage as any, isActive: true, deletedAt: null },
+      where: { stage: stage as any, isActive: true, deletedAt: null, createdById: userId },
       orderBy: { name: 'asc' },
     });
   },
 
-  async getById(id: string) {
+  async getById(id: string, userId: string) {
     return await prisma.emailTemplate.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, createdById: userId },
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   },
 
-  async update(id: string, data: any) {
-    const updateData: any = {};
+async update(id: string, userId: string, data: any) {
+  const existing = await this.getById(id, userId);
+  if (!existing) throw new Error('Template not found or unauthorized');
+  const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.stage !== undefined) updateData.stage = data.stage;
     if (data.subject !== undefined) updateData.subject = data.subject;
@@ -61,9 +63,9 @@ export const EmailTemplateService = {
     });
   },
 
-  async delete(id: string) {
-    return await prisma.emailTemplate.update({
-      where: { id },
+async delete(id: string, userId: string) {
+  return await prisma.emailTemplate.update({
+    where: { id, createdById: userId },
       data: { deletedAt: new Date() },
     });
   },

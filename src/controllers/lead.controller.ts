@@ -10,7 +10,8 @@ export class LeadController {
     try {
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
-      const leads = await leadService.getAll(search, status);
+      const userId = req.user!.userId;
+      const leads = await leadService.getAll(userId, search, status);
 
       res.status(200).json({
         success: true,
@@ -24,7 +25,8 @@ export class LeadController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const lead = await leadService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+      const lead = await leadService.getById(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
@@ -55,7 +57,8 @@ export class LeadController {
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateLeadSchema.parse(req.body);
-      const lead = await leadService.update(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+      const lead = await leadService.update(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,
@@ -70,7 +73,8 @@ export class LeadController {
   async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateLeadStatusSchema.parse(req.body);
-      const lead = await leadService.updateStatus(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+      const lead = await leadService.updateStatus(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,
@@ -86,7 +90,8 @@ async assignTo(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { assignedToId, assignedToName } = req.body;
 
-    const lead = await leadService.assignTo(req.params.id as string, assignedToId, assignedToName);
+    const userId = req.user!.userId;
+    const lead = await leadService.assignTo(req.params.id as string, userId, assignedToId, assignedToName);
 
     res.status(200).json({
       success: true,
@@ -100,7 +105,8 @@ async assignTo(req: AuthRequest, res: Response, next: NextFunction) {
 
   async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await leadService.delete(req.params.id as string);
+      const userId = req.user!.userId;
+       await leadService.delete(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,

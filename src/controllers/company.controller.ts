@@ -9,7 +9,8 @@ export class CompanyController {
   async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const search = req.query.search as string | undefined;
-      const companies = await companyService.getAll(search);
+      const userId = req.user!.userId;
+const companies = await companyService.getAll(userId, search);
 
       res.status(200).json({
         success: true,
@@ -23,7 +24,8 @@ export class CompanyController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const company = await companyService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+const company = await companyService.getById(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
@@ -37,7 +39,8 @@ export class CompanyController {
   async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = createCompanySchema.parse(req.body);
-      const company = await companyService.create(validatedData);
+      const userId = req.user!.userId;
+const company = await companyService.create(validatedData, userId);
 
       res.status(201).json({
         success: true,
@@ -52,7 +55,8 @@ export class CompanyController {
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateCompanySchema.parse(req.body);
-      const company = await companyService.update(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const company = await companyService.update(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,
@@ -66,7 +70,8 @@ export class CompanyController {
 
   async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await companyService.delete(req.params.id as string);
+      const userId = req.user!.userId;
+await companyService.delete(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,

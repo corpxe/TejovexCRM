@@ -4,10 +4,11 @@ import { CreateNoteInput, UpdateNoteInput } from '../validators/note.validator';
 
 export class NoteService {
 
-  async getAll(contactId?: string, leadId?: string, dealId?: string) {
+  async getAll(userId: string, contactId?: string, leadId?: string, dealId?: string) {
     return prisma.note.findMany({
-      where: {
-        ...(contactId && { contactId }),
+where: {
+  createdById: userId,
+  ...(contactId && { contactId }),
         ...(leadId && { leadId }),
         ...(dealId && { dealId }),
       },
@@ -44,9 +45,9 @@ export class NoteService {
     });
   }
 
-  async getById(id: string) {
-    const note = await prisma.note.findUnique({
-      where: { id },
+  async getById(id: string, userId: string) {
+const note = await prisma.note.findFirst({
+  where: { id, createdById: userId },
       include: {
         createdBy: {
           select: {
@@ -94,7 +95,7 @@ export class NoteService {
   }
 
   async update(id: string, data: UpdateNoteInput, userId: string) {
-    const note = await this.getById(id);
+    const note = await this.getById(id, userId);
 
     // Only the person who created the note can edit it
     if (note.createdById !== userId) {
@@ -117,7 +118,7 @@ export class NoteService {
   }
 
 async delete(id: string, userId: string) {
-  const note = await this.getById(id);
+  const note = await this.getById(id, userId);
   return prisma.note.delete({ where: { id } });
 }
 }

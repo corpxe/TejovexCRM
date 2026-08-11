@@ -33,11 +33,12 @@ export class DealService {
 
   // ─── Deals ─────────────────────────────────
 
-  async getAll(search?: string, status?: string, stageId?: string) {
-    return prisma.deal.findMany({
-      where: {
-        deletedAt: null,
-        ...(status && { status: status as any }),
+async getAll(userId: string, search?: string, status?: string, stageId?: string) { 
+     return prisma.deal.findMany({
+where: {
+  deletedAt: null,
+  createdById: userId,
+  ...(status && { status: status as any }),
         ...(stageId && { stageId }),
         ...(search && {
           OR: [
@@ -68,9 +69,9 @@ export class DealService {
     });
   }
 
-  async getById(id: string) {
+  async getById(id: string, userId: string) {
     const deal = await prisma.deal.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, createdById: userId },
       include: {
         stage: true,
         contact: true,
@@ -94,19 +95,20 @@ export class DealService {
     return deal;
   }
 
-  async create(data: CreateDealInput, assignedToId?: string) {
+  async create(data: CreateDealInput, userId: string) {
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: data.stageId },
     });
     if (!stage) throw new AppError('Pipeline stage not found', 404);
 
-    return prisma.deal.create({
-      data: {
-        ...data,
-        expectedCloseDate: data.expectedCloseDate
-          ? new Date(data.expectedCloseDate)
-          : undefined,
-      },
+return prisma.deal.create({
+  data: {
+    ...data,
+    createdById: userId,
+    expectedCloseDate: data.expectedCloseDate
+      ? new Date(data.expectedCloseDate)
+      : undefined,
+  },
       include: {
         stage: true,
         contact: true,
@@ -123,8 +125,8 @@ export class DealService {
     });
   }
 
-  async update(id: string, data: UpdateDealInput) {
-    await this.getById(id);
+  async update(id: string, userId: string, data: UpdateDealInput) {
+    await this.getById(id, userId);
 
     return prisma.deal.update({
       where: { id },
@@ -142,8 +144,8 @@ export class DealService {
     });
   }
 
-  async updateStatus(id: string, data: UpdateDealStatusInput) {
-    await this.getById(id);
+async updateStatus(id: string, userId: string, data: UpdateDealStatusInput) {
+  await this.getById(id, userId);
 
     return prisma.deal.update({
       where: { id },
@@ -151,8 +153,8 @@ export class DealService {
     });
   }
 
-  async moveStage(id: string, stageId: string) {
-    await this.getById(id);
+async moveStage(id: string, userId: string, stageId: string) {
+  await this.getById(id, userId);
 
     const stage = await prisma.pipelineStage.findUnique({
       where: { id: stageId },
@@ -166,8 +168,8 @@ export class DealService {
     });
   }
 
-  async delete(id: string) {
-    await this.getById(id);
+async delete(id: string, userId: string) {
+  await this.getById(id, userId);
 
     return prisma.deal.update({
       where: { id },

@@ -4,11 +4,12 @@ import { CreateTaskInput, UpdateTaskInput, UpdateTaskStatusInput } from '../vali
 
 export class TaskService {
 
-  async getAll(search?: string, status?: string, priority?: string) {
-    return prisma.task.findMany({
-      where: {
-        deletedAt: null,
-        ...(status && { status: status as any }),
+async getAll(userId: string, search?: string, status?: string, priority?: string) {
+      return prisma.task.findMany({
+where: {
+  deletedAt: null,
+  createdById: userId,
+  ...(status && { status: status as any }),
         ...(priority && { priority: priority as any }),
         ...(search && {
           OR: [

@@ -8,7 +8,8 @@ export class ContactController {
   async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const search = req.query.search as string | undefined;
-      const contacts = await contactService.getAll(search);
+      const userId = req.user!.userId;
+const contacts = await contactService.getAll(userId, search);
 
       res.status(200).json({
         success: true,
@@ -22,7 +23,8 @@ export class ContactController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const contact = await contactService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+const contact = await contactService.getById(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
@@ -36,7 +38,8 @@ export class ContactController {
   async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = createContactSchema.parse(req.body);
-      const contact = await contactService.create(validatedData);
+      const userId = req.user!.userId;
+const contact = await contactService.create(validatedData, userId);
 
       res.status(201).json({
         success: true,
@@ -51,7 +54,8 @@ export class ContactController {
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateContactSchema.parse(req.body);
-      const contact = await contactService.update(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const contact = await contactService.update(req.params.id as string, userId, validatedData)
 
       res.status(200).json({
         success: true,
@@ -65,7 +69,8 @@ export class ContactController {
 
   async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await contactService.delete(req.params.id as string);
+      const userId = req.user!.userId;
+await contactService.delete(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
@@ -78,7 +83,8 @@ export class ContactController {
   async importContacts(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const parsed  = bulkImportContactsSchema.parse(req.body);
-    const results = await contactService.bulkImport(parsed.contacts);
+    const userId = req.user!.userId;
+const results = await contactService.bulkImport(parsed.contacts, userId);
 
     res.status(200).json({
       success: true,

@@ -56,7 +56,8 @@ export class DealController {
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
       const stageId = req.query.stageId as string | undefined;
-      const deals = await dealService.getAll(search, status, stageId);
+      const userId = req.user!.userId;
+const deals = await dealService.getAll(userId, search, status, stageId);
 
       res.status(200).json({
         success: true,
@@ -70,7 +71,8 @@ export class DealController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const deal = await dealService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+const deal = await dealService.getById(req.params.id as string, userId);
       res.status(200).json({ success: true, data: deal });
     } catch (error) {
       next(error);
@@ -82,7 +84,7 @@ export class DealController {
       if (!req.user) throw new AppError('Not authorized', 401);
 
       const validatedData = createDealSchema.parse(req.body);
-      const deal = await dealService.create(validatedData);
+      const deal = await dealService.create(validatedData, req.user!.userId);
 
       res.status(201).json({
         success: true,
@@ -97,7 +99,8 @@ export class DealController {
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateDealSchema.parse(req.body);
-      const deal = await dealService.update(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const deal = await dealService.update(req.params.id as string, userId, validatedData)
 
       res.status(200).json({
         success: true,
@@ -112,7 +115,8 @@ export class DealController {
   async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateDealStatusSchema.parse(req.body);
-      const deal = await dealService.updateStatus(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const deal = await dealService.updateStatus(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,
@@ -129,7 +133,8 @@ export class DealController {
       const { stageId } = req.body;
       if (!stageId) throw new AppError('stageId is required', 400);
 
-      const deal = await dealService.moveStage(req.params.id as string, stageId);
+      const userId = req.user!.userId;
+const deal = await dealService.moveStage(req.params.id as string, userId, stageId)
 
       res.status(200).json({
         success: true,
@@ -143,7 +148,8 @@ export class DealController {
 
   async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await dealService.delete(req.params.id as string);
+      const userId = req.user!.userId;
+await dealService.delete(req.params.id as string, userId);
       res.status(200).json({
         success: true,
         message: 'Deal deleted successfully',

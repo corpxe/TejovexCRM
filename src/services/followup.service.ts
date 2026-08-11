@@ -107,14 +107,14 @@ export const FollowUpService = {
     });
   },
 
-  async getAll(filters: {
-    status?: string;
-    type?: string;
-    leadId?: string;
-    contactId?: string;
-    dealId?: string;
-  } = {}) {
-    const where: any = { deletedAt: null };
+async getAll(userId: string, filters: {
+  status?: string;
+  type?: string;
+  leadId?: string;
+  contactId?: string;
+  dealId?: string;
+} = {}) {
+    const where: any = { deletedAt: null, createdById: userId };
     if (filters.status) where.status = filters.status;
     if (filters.type) where.type = filters.type;
     if (filters.leadId) where.leadId = filters.leadId;
@@ -135,9 +135,9 @@ export const FollowUpService = {
     });
   },
 
-  async getById(id: string) {
+  async getById(id: string, userId: string) {
     return await prisma.followUp.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, createdById: userId },
       include: {
         lead: { select: { id: true, title: true, contactName: true } },
         contact: { select: { id: true, firstName: true, lastName: true } },
@@ -149,8 +149,10 @@ export const FollowUpService = {
     });
   },
 
-  async update(id: string, data: any) {
-    const updateData: any = {};
+async update(id: string, userId: string, data: any) {
+  const existing = await this.getById(id, userId);
+  if (!existing) throw new Error('Follow-up not found or unauthorized');
+  const updateData: any = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.priority !== undefined) updateData.priority = data.priority;
@@ -178,9 +180,9 @@ export const FollowUpService = {
     });
   },
 
-  async delete(id: string) {
-    return await prisma.followUp.update({
-      where: { id },
+async delete(id: string, userId: string) {
+  return await prisma.followUp.update({
+    where: { id, createdById: userId },
       data: { deletedAt: new Date() },
     });
   },
@@ -273,24 +275,25 @@ export const FollowUpService = {
     console.log(`[CRON] Scheduled email check complete`);
   },
 
-  async getTodayCount() {
+  async getTodayCount(userId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     return await prisma.followUp.count({
-      where: {
-        status: 'PENDING',
-        dueDate: { gte: today, lt: tomorrow },
-        deletedAt: null,
-      },
+where: {
+  status: 'PENDING',
+  dueDate: { gte: today, lt: tomorrow },
+  deletedAt: null,
+  createdById: userId,
+},
     });
   },
 
-  async getOverdueCount() {
-    return await prisma.followUp.count({
-      where: { status: 'OVERDUE', deletedAt: null },
+async getOverdueCount(userId: string) {
+  return await prisma.followUp.count({
+    where: { status: 'OVERDUE', deletedAt: null, createdById: userId },
     });
   },
 };

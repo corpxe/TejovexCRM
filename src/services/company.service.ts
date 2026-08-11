@@ -4,11 +4,12 @@ import { CreateCompanyInput, UpdateCompanyInput } from '../validators/company.va
 
 export class CompanyService {
 
-async getAll(search?: string) {
-  const companies = await prisma.company.findMany({
-    where: {
-      deletedAt: null,
-      ...(search && {
+async getAll(userId: string, search?: string) {
+    const companies = await prisma.company.findMany({
+where: {
+  deletedAt: null,
+  createdById: userId,
+  ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { industry: { contains: search, mode: 'insensitive' } },
@@ -46,9 +47,9 @@ async getAll(search?: string) {
   }));
 }
 
-  async getById(id: string) {
-    const company = await prisma.company.findFirst({
-      where: { id, deletedAt: null },
+async getById(id: string, userId: string) {
+      const company = await prisma.company.findFirst({
+where: { id, deletedAt: null, createdById: userId },
       include: {
         contacts: {
           where: { deletedAt: null },
@@ -63,14 +64,14 @@ async getAll(search?: string) {
     return company;
   }
 
-  async create(data: CreateCompanyInput) {
-    return prisma.company.create({
-      data,
-    });
+  async create(data: CreateCompanyInput, userId: string) {
+return prisma.company.create({
+  data: { ...data, createdById: userId },
+});
   }
 
-  async update(id: string, data: UpdateCompanyInput) {
-    await this.getById(id);
+async update(id: string, userId: string, data: UpdateCompanyInput) {
+  await this.getById(id, userId); 
 
     return prisma.company.update({
       where: { id },
@@ -78,8 +79,8 @@ async getAll(search?: string) {
     });
   }
 
-  async delete(id: string) {
-    await this.getById(id);
+async delete(id: string, userId: string) {
+  await this.getById(id, userId);
 
     return prisma.company.update({
       where: { id },

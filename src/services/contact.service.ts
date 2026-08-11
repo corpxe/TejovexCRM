@@ -5,10 +5,11 @@ import { CreateContactInput, UpdateContactInput } from '../validators/contact.va
 export class ContactService {
 
   // Get all contacts — UNCHANGED
-  async getAll(search?: string) {
+  async getAll(userId: string, search?: string) {
     return prisma.contact.findMany({
-      where: {
-        deletedAt: null,
+where: {
+  deletedAt: null,
+  createdById: userId,
         ...(search && {
           OR: [
             { firstName: { contains: search, mode: 'insensitive' } },
@@ -24,9 +25,9 @@ export class ContactService {
   }
 
   // Get single contact — UNCHANGED
-  async getById(id: string) {
-    const contact = await prisma.contact.findFirst({
-      where: { id, deletedAt: null },
+async getById(id: string, userId: string) {
+      const contact = await prisma.contact.findFirst({
+      where: { id, deletedAt: null, createdById: userId },
       include: {
         company: true,
         leads:   true,
@@ -62,7 +63,7 @@ export class ContactService {
   }
 
   // Create contact — CHANGED
-  async create(data: CreateContactInput) {
+async create(data: CreateContactInput, userId: string) {  
     if (data.email) {
       // CHANGED: findUnique → findFirst with deletedAt: null (only checks active contacts)
       const activeContact = await prisma.contact.findFirst({
@@ -78,14 +79,15 @@ export class ContactService {
       if (deletedContact) {
         return prisma.contact.update({
           where: { id: deletedContact.id },
-          data: {
-            firstName: data.firstName,
-            lastName:  data.lastName,
-            phone:     data.phone,
-            companyId: await this.resolveCompanyId(data),
-            deletedAt: null,         // brings it back
-            updatedAt: new Date(),
-          },
+data: {
+  firstName:   data.firstName,
+  lastName:    data.lastName,
+  phone:       data.phone,
+  companyId:   await this.resolveCompanyId(data),
+  deletedAt:   null,
+  updatedAt:   new Date(),
+  createdById: userId,
+},
           include: { company: true },
         });
       }
@@ -94,20 +96,21 @@ export class ContactService {
     // Normal create — no conflict at all
     // CHANGED: inline company logic replaced with resolveCompanyId helper
     return prisma.contact.create({
-      data: {
-        firstName: data.firstName,
-        lastName:  data.lastName,
-        email:     data.email,
-        phone:     data.phone,
-        companyId: await this.resolveCompanyId(data),
-      },
+data: {
+  firstName:   data.firstName,
+  lastName:    data.lastName,
+  email:       data.email,
+  phone:       data.phone,
+  companyId:   await this.resolveCompanyId(data),
+  createdById: userId,
+},
       include: { company: true },
     });
   }
 
   // Update contact — CHANGED: inline company logic replaced with resolveCompanyId helper
-  async update(id: string, data: UpdateContactInput) {
-    await this.getById(id);
+async update(id: string, userId: string, data: UpdateContactInput) {
+  await this.getById(id, userId);
 
     return prisma.contact.update({
       where: { id },
@@ -123,16 +126,17 @@ export class ContactService {
   }
 
   // Soft delete — UNCHANGED
-  async delete(id: string) {
-    await this.getById(id);
+async delete(id: string, userId: string) {
+  await this.getById(id, userId);
 
     return prisma.contact.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
   }
-  async bulkImport(
-  contacts: { firstName: string; lastName?: string; email?: string; phone?: string }[]
+async bulkImport(
+  contacts: { firstName: string; lastName?: string; email?: string; phone?: string }[],
+  userId: string
 ): Promise<{ created: number; skipped: number; errors: string[] }> {
   const results = { created: 0, skipped: 0, errors: [] as string[] };
 
@@ -150,7 +154,7 @@ export class ContactService {
       }
 
       await prisma.contact.create({
-        data: { firstName: contact.firstName.trim(), lastName, email, phone },
+        data: { firstName: contact.firstName.trim(), lastName, email, phone, createdById: userId },
       });
       results.created++;
     } catch (err: any) {

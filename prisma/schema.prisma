@@ -39,6 +39,9 @@ model User {
   followUpsAssigned     FollowUp[]      @relation("FollowUpAssignedTo")
   followUpsCreated      FollowUp[]      @relation("FollowUpCreatedBy")
   emailTemplatesCreated EmailTemplate[] @relation("EmailTemplateCreatedBy")
+  createdCompanies  Company[]  @relation("CreatedCompanies")
+createdContacts   Contact[]  @relation("CreatedContacts")
+createdDeals      Deal[]     @relation("CreatedDeals")
 }
 
 model Company {
@@ -49,6 +52,8 @@ model Company {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdById String?
+  createdBy   User?    @relation("CreatedCompanies", fields: [createdById], references: [id])
   contacts  Contact[]
   deals     Deal[]
 }
@@ -63,6 +68,8 @@ model Contact {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdById String?
+createdBy   User?    @relation("CreatedContacts", fields: [createdById], references: [id])
   company   Company?  @relation(fields: [companyId], references: [id])
   deals     Deal[]
   leads     Lead[]
@@ -117,6 +124,8 @@ model Deal {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   deletedAt         DateTime?
+  createdById String?
+createdBy   User?    @relation("CreatedDeals", fields: [createdById], references: [id])
   assignedTo        User?         @relation("AssignedDeals", fields: [assignedToId], references: [id])
   company           Company?      @relation(fields: [companyId], references: [id])
   contact           Contact?      @relation(fields: [contactId], references: [id])

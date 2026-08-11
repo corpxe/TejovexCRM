@@ -11,7 +11,8 @@ export class TaskController {
       const search = req.query.search as string | undefined;
       const status = req.query.status as string | undefined;
       const priority = req.query.priority as string | undefined;
-      const tasks = await taskService.getAll(search, status, priority);
+      const userId = req.user!.userId;
+const tasks = await taskService.getAll(userId, search, status, priority);
 
       res.status(200).json({
         success: true,
@@ -25,7 +26,8 @@ export class TaskController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const task = await taskService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+const task = await taskService.getById(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
@@ -72,7 +74,8 @@ export class TaskController {
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateTaskSchema.parse(req.body);
-      const task = await taskService.update(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const task = await taskService.update(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,
@@ -87,7 +90,8 @@ export class TaskController {
   async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const validatedData = updateTaskStatusSchema.parse(req.body);
-      const task = await taskService.updateStatus(req.params.id as string, validatedData);
+      const userId = req.user!.userId;
+const task = await taskService.updateStatus(req.params.id as string, userId, validatedData);
 
       res.status(200).json({
         success: true,

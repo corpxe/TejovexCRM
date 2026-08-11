@@ -4,10 +4,11 @@ import { CreateLeadInput, UpdateLeadInput, UpdateLeadStatusInput } from '../vali
 
 export class LeadService {
 
-  async getAll(search?: string, status?: string) {
-    return prisma.lead.findMany({
-      where: {
-        deletedAt: null,
+async getAll(userId: string, search?: string, status?: string) {   
+   return prisma.lead.findMany({
+where: {
+  deletedAt: null,
+  createdById: userId,
         ...(status && { status: status as any }),
         ...(search && {
           OR: [
@@ -43,9 +44,9 @@ export class LeadService {
     });
   }
 
-  async getById(id: string) {
-    const lead = await prisma.lead.findFirst({
-      where: { id, deletedAt: null },
+async getById(id: string, userId: string) {
+      const lead = await prisma.lead.findFirst({
+where: { id, deletedAt: null, createdById: userId },
       include: {
         contact: true,
         assignedTo: {
@@ -94,8 +95,8 @@ export class LeadService {
     });
   }
 
-  async update(id: string, data: UpdateLeadInput) {
-    await this.getById(id);
+async update(id: string, userId: string, data: UpdateLeadInput) {
+  await this.getById(id, userId);
 
     return prisma.lead.update({
       where: { id },
@@ -114,8 +115,8 @@ export class LeadService {
     });
   }
 
-  async updateStatus(id: string, data: UpdateLeadStatusInput) {
-    await this.getById(id);
+async updateStatus(id: string, userId: string, data: UpdateLeadStatusInput) {
+  await this.getById(id, userId);
 
     return prisma.lead.update({
       where: { id },
@@ -123,8 +124,8 @@ export class LeadService {
     });
   }
 
-async assignTo(id: string, assignedToId?: string, assignedToName?: string) {
-  await this.getById(id);
+async assignTo(id: string, userId: string, assignedToId?: string, assignedToName?: string) {
+  await this.getById(id, userId);
 
   return prisma.lead.update({
     where: { id },
@@ -145,8 +146,8 @@ async assignTo(id: string, assignedToId?: string, assignedToName?: string) {
   });
 }
 
-  async delete(id: string) {
-    await this.getById(id);
+async delete(id: string, userId: string) {
+  await this.getById(id, userId);
 
     return prisma.lead.update({
       where: { id },

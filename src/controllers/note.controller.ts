@@ -12,7 +12,8 @@ export class NoteController {
       const leadId = req.query.leadId as string | undefined;
       const dealId = req.query.dealId as string | undefined;
 
-      const notes = await noteService.getAll(contactId, leadId, dealId);
+      const userId = req.user!.userId;
+const notes = await noteService.getAll(userId, contactId, leadId, dealId);
 
       res.status(200).json({
         success: true,
@@ -26,7 +27,8 @@ export class NoteController {
 
   async getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const note = await noteService.getById(req.params.id as string);
+      const userId = req.user!.userId;
+const note = await noteService.getById(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
