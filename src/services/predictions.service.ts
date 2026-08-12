@@ -2,7 +2,7 @@ import prisma from '../config/database'; // same import as above
 
 export const getAllPredictions = async (userId: string) => {
   return prisma.prediction.findMany({
-    where: { userId, deletedAt: undefined },
+    where: { userId },
     orderBy: { createdAt: 'desc' },
     take: 20,
   });
