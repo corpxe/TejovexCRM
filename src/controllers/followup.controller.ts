@@ -63,7 +63,7 @@ await FollowUpService.delete(req.params.id as string, userId);
   }
 };
 
-export const getDashboardStats = async (_req: Request, res: Response) => {
+export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
 const todayCount = await FollowUpService.getTodayCount(userId);

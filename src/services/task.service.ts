@@ -56,9 +56,9 @@ where: {
     });
   }
 
-  async getById(id: string) {
-    const task = await prisma.task.findFirst({
-      where: { id, deletedAt: null },
+async getById(id: string, userId: string) {
+      const task = await prisma.task.findFirst({
+      where: { id, deletedAt: null, createdById: userId },
       include: {
         assignedTo: {
           select: {
@@ -131,8 +131,8 @@ where: {
     });
   }
 
-  async update(id: string, data: UpdateTaskInput) {
-    await this.getById(id);
+async update(id: string, userId: string, data: UpdateTaskInput) {
+  await this.getById(id, userId);
 
     return prisma.task.update({
       where: { id },
@@ -153,8 +153,8 @@ where: {
     });
   }
 
-  async updateStatus(id: string, data: UpdateTaskStatusInput) {
-    await this.getById(id);
+async updateStatus(id: string, userId: string, data: UpdateTaskStatusInput) {
+  await this.getById(id, userId);
 
     return prisma.task.update({
       where: { id },
@@ -162,8 +162,8 @@ where: {
     });
   }
 
-  async delete(id: string) {
-    await this.getById(id);
+  async delete(id: string, userId: string) {
+    await this.getById(id, userId);
 
     return prisma.task.update({
       where: { id },

@@ -105,7 +105,8 @@ const task = await taskService.updateStatus(req.params.id as string, userId, val
 
   async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await taskService.delete(req.params.id as string);
+      const userId = req.user!.userId;
+      await taskService.delete(req.params.id as string, userId);
 
       res.status(200).json({
         success: true,
