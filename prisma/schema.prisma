@@ -42,6 +42,7 @@ model User {
   createdCompanies  Company[]  @relation("CreatedCompanies")
 createdContacts   Contact[]  @relation("CreatedContacts")
 createdDeals      Deal[]     @relation("CreatedDeals")
+predictions       Prediction[]
 }
 
 model Company {
@@ -233,6 +234,21 @@ model EmailTemplate {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+model Prediction {
+  id         String   @id @default(cuid())
+  entityType String   // "DEAL" | "LEAD" | "FOLLOW_UP"
+  entityId   String
+  type       String   // "WIN_PROBABILITY" | "CONVERSION_SCORE" | "CHURN_RISK" | "REVENUE_FORECAST"
+  score      Float?
+  label      String?
+  reasoning  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 enum LeadStatus {
